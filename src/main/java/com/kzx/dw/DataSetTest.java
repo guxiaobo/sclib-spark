@@ -6,6 +6,12 @@
  */
 package com.kzx.dw;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.api.java.JavaSQLContext;
@@ -18,22 +24,51 @@ import com.kzx.dw.bean.SubPerson;
 public class DataSetTest {
 	public static void main(String[] args) {
 		JavaSparkContext sc = new JavaSparkContext("local", "DataSetTest");
-		JavaSQLContext stx = new JavaSQLContext(sc);
+		final JavaSQLContext stx = new JavaSQLContext(sc);
 		JavaRDD<String> rdd = sc.textFile("person");
 
-		JavaRDD<Person> person = DataSetTransformer.rddStringToT(rdd, Person.class);
+		final JavaRDD<Person> person = DataSetTransformer.rddStringToT(rdd, Person.class);
 		
-		for(Person p : person.collect())
-		{
-			System.out.println("name=" + p.getName() + ",age=" + p.getAge() + ",prov=" + p.getProv());
+			
+		ExecutorService executor = Executors.newFixedThreadPool(3);
+		
+		Future<JavaSchemaRDD> future = executor.submit(new Callable<JavaSchemaRDD>() {
+			/* (non-Javadoc)
+			 * @see java.util.concurrent.Callable#call()
+			 */
+			@Override
+			public JavaSchemaRDD call() throws Exception {
+				// TODO Auto-generated method stub
+				return DataSetAnalyzer.max(stx,Person.class, person, "name","age");
+			}
+		});
+				
+		Future<JavaSchemaRDD> future1 = executor.submit(new Callable<JavaSchemaRDD>() {
+			/* (non-Javadoc)
+			 * @see java.util.concurrent.Callable#call()
+			 */
+			@Override
+			public JavaSchemaRDD call() throws Exception {
+				// TODO Auto-generated method stub
+				return DataSetAnalyzer.groupByKey(stx,Person.class, person, "name","age");
+			}
+		});
+		
+		try {
+			for(SubPerson sub : DataSetTransformer.schemaRDDToT(future1.get(), SubPerson.class).collect())
+			{
+				System.out.println("subname=" + sub.getName() + ",subage=" + sub.getAge());
+			}
+			
+			for(SubPerson sub : DataSetTransformer.schemaRDDToT(future.get(), SubPerson.class).collect())
+			{
+				System.out.println("subname=" + sub.getName() + ",subage=" + sub.getAge());
+			}
+
+		} catch (Exception e) {
+			// TODO: handle exception
 		}
-		
-		JavaSchemaRDD schema = DataSetAnalyzer.groupByKey(stx,Person.class, person, "name","age");
-		
-		for(SubPerson sub : DataSetTransformer.schemaRDDToT(schema, SubPerson.class).collect())
-		{
-			System.out.println("subname=" + sub.getName() + ",subage=" + sub.getAge());
-		}
+		executor.shutdown();
 	}
 	
 }
