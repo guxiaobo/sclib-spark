@@ -63,4 +63,40 @@ public class DataSetAnalyzer {
 		JavaSchemaRDD result = stx.sql("select "+colStr+" from "+tablename);
 		return result;
 	}
+	
+	public static <T> JavaSchemaRDD max1(JavaSQLContext stx,final Class<T> cl, JavaRDD rdd, String... columnName)
+	{
+		
+		JavaSchemaRDD javaSch = stx.applySchema(rdd, cl);
+		String tablename = cl.getName();
+		stx.registerRDDAsTable(javaSch, tablename);
+		
+		String colStr="";
+		int i=0;
+		for(String col : columnName)
+		{
+			if(i>0)
+				colStr+= "," + "max("+ col +")";
+			else
+				colStr+= "max("+ col +")";
+			i++;
+		}
+		
+		JavaSchemaRDD result = stx.sql("select "+colStr+" from "+tablename);
+		return result;
+	}
+	
+	public static JavaSchemaRDD sql(JavaSQLContext stx,final Class[] cl, JavaRDD[] rdd, String sql)
+	{
+		for(int i=0;i<rdd.length; i++)
+		{
+			JavaSchemaRDD javaSch = stx.applySchema(rdd[i], cl[i]);
+			String tablename = cl[i].getSimpleName();
+			System.out.println("simplename" + tablename);
+			stx.registerRDDAsTable(javaSch, tablename);
+		}
+	
+		return stx.sql(sql);
+	}
+	
 }

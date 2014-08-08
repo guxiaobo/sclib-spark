@@ -5,8 +5,6 @@
 * @date 2014年8月6日 下午2:41:22 
  */
 package com.kzx.dw.util;
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
@@ -45,7 +43,7 @@ public class CommandUtil {
 				try {
 					error = new LineNumberReader(isrError);
 					while ((line = error.readLine()) != null) {
-						 //resultStr += line + "\n";
+						 resultStr += line + "\n";
 					}
 					child.waitFor();
 				} finally {

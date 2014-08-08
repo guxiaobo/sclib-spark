@@ -5,24 +5,15 @@
 * @date 2014年8月5日 下午2:16:48 
  */
 package com.kzx.dw.util;
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
+import java.util.List;
 import javax.tools.DiagnosticCollector;
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileManager;
@@ -33,7 +24,9 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import javax.tools.JavaFileObject.Kind;
-	 
+import com.kzx.dw.SclibException;
+import com.kzx.dw.SparkTable;
+
 public class JavaSourceUtil {
 	 
 	    private static final String GET = "get";
@@ -162,7 +155,7 @@ public class JavaSourceUtil {
 	        }
 	    }
 	 
-	    private static byte[] compile(String name, String source) {
+	    public static byte[] compile(String name, String source) {
 	        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 	        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
 	        StandardJavaFileManager sfm = compiler.getStandardFileManager(
@@ -186,43 +179,32 @@ public class JavaSourceUtil {
 	        return null;
 	    }
 	 
-	    
-	    /* (non-Javadoc)
-	    * @see java.lang.Object#toString()
-	    */
-	    @Override
-	    public String toString() {
-	    // TODO Auto-generated method stub
-	    return super.toString();
-	    }
-	    public static String makeJavaSource(Map<String,String> tableDefine,String tablename) {
-	     
-	 
+	    public static String makeJavaSource(List<String> filedName, List<String> filedType,String tablename, String packagename) {
+	      
 	        StringBuilder source = new StringBuilder();
 
-	        source.append("package ").append("bean").append(";\n");
+	        source.append("package "+packagename+";\n");
 	 
 	        // imports
-	        source.append("import java.io.Serializable;\n");
+	        source.append("import java.io.Serializable;\n");	        	        
 
 	        // class name & extends
 	        source.append("public class ").append(tablename).append(" implements Serializable ").append("\n{\n");
 	 
+	        source.append("static final long serialVersionUID = 12630484304578L;");
+
 	        // property 
-	        for(Map.Entry<String, String> entry : tableDefine.entrySet())
+	        for(int i=0; i < filedName.size(); i++)
 	        {
-	        	String name = entry.getKey();
-	        	String type = entry.getValue();
-	        	source.append("\tprivate ").append(type).append(" ").append(name).append(";\n");
+	        	source.append("\tprivate ").append(filedType.get(i)).append(" ").append(filedName.get(i)).append(";\n");
 	        }
 	        
-	        String s="";
-	        int i=0;
+	        
 	        // get&set method 
-	        for(Map.Entry<String, String> entry : tableDefine.entrySet())
+	        for(int i=0; i < filedName.size(); i++)
 	        {
-	        	String name = entry.getKey();
-	        	String type = entry.getValue();
+	        	String name = filedName.get(i);
+	        	String type = filedType.get(i);
 	        	//get
 	        	source.append("\tpublic "+type+ " get");
 	        	source.append(name.substring(0,1).toUpperCase()+ name.substring(1,name.length()));
@@ -234,21 +216,25 @@ public class JavaSourceUtil {
 	        	source.append(name.substring(0,1).toUpperCase()+ name.substring(1,name.length()));
 	        	source.append("("+type +" " + name +")\n\t{\n");
 	        	source.append("\t\tthis." + name + "=" + name + ";\n");
-	        	source.append("\t}\n\n");
-	        	
-	        	if(i>0)
+	        	source.append("\t}\n\n");	        		        	
+	        }
+	      	        
+	        //toString
+	        String s="";
+	        int i=0;
+	        for(String name : filedName)
+	        {
+		        if(i>0)
 	        		s+= "+\"\\t\"+";
 	        	s+=name;	
 	        	i++;
-	        }
-	        
-	        //toString
+	        }        	
 	        source.append("\t @Override\n");
 	        source.append("\t public String toString() {\n");
         	source.append("\t\treturn " + s + ";\n");
         	source.append("\t}\n\n");
-	        source.append("}");
-	        
+        	        		        
+        	source.append("}");
 	        return source.toString();
 	    }
 	 
@@ -314,94 +300,10 @@ public class JavaSourceUtil {
 	        return type;
 	    }
 	    
-	    
-	    public static String getJarPath(String define, String tablename)
+	    public static Class<?>  getClass(List<String> filedName, List<String> filedType,String tablename, String packagename)
 	    {
-	    	Map<String,String> tableDefine = new HashMap<String,String>();
-	        for(String segment : define.split(";"))
-	        {	        	
-	        	String []s = segment.split(" ");
-	        	if(s.length==2)
-	        	{
-	        		if(tableDefine.containsKey(s[1]))
-	        			return null;
-	        		tableDefine.put(s[1], s[0]);
-	        	}	
-	        	
-	        }
-	       
-	        String source = makeJavaSource(tableDefine, tablename);
-	      
-	        byte[] data = compile(tablename, source);
-	        
-	        
-		    try {
-		    	String path = "/tmp/sclib/bean";
-		    	File f=new File(path);
-		    	if(!f.isDirectory())
-		    	{
-		    		mkDir(f);
-		    	}
-		    	
-		    	String file = path+"/"+tablename+".class";
-		    	
-		    	f=new File(file);
-		    	if(!f.exists())
-		    	{
-		    		f.createNewFile();
-		    		System.out.println("文件"+f.getPath()+"已创建");
-		    	}
-		    	else
-		    	{
-		    		f.delete();
-		    		f.createNewFile();
-		    		System.out.println("文件"+f.getPath()+"已创建1111");
-		    	}
-		    		               
-		    	FileOutputStream fos=new FileOutputStream(f);
-		    	fos.write(data);
-		    	fos.close();
-		    	String targetJar = tablename + ".jar";
-		    	CommandUtil.execute("rm /tmp/sclib/" + targetJar);
-		    	System.out.println(CommandUtil.execute("cd /tmp/sclib;jar cvf " + targetJar  +" bean/" + tablename +".class"));
-		    	
-		    		
-		    	 
-		    	return targetJar;
-			       
-			} catch (Exception e) {
-				LogUtil.UTILLOG.error("JavaSourceUtil#getJarPath error" ,e );
-			}  
-		    return null;
-	    }
-	    
-	    //创建递归目录
-	    private static void mkDir(File file){
-	    	if(file.getParentFile().exists()){
-	    		file.mkdir();
-	    	}else{
-	    		mkDir(file.getParentFile());
-	    		file.mkdir();
-	    	}
-	    }
-	    
-	    public static Class<?>  getClass(String define, String tablename)
-	    {
-	    	
-	        Map<String,String> tableDefine = new HashMap<String,String>();
-	        for(String segment : define.split(";"))
-	        {	        	
-	        	String []s = segment.split(" ");
-	        	if(s.length==2)
-	        	{
-	        		if(tableDefine.containsKey(s[1]))
-	        			return null;
-	        		tableDefine.put(s[1], s[0]);
-	        	}	
-	        	
-	        }
-	       
-	        String source = makeJavaSource(tableDefine, tablename);
+	    	       
+	        String source = makeJavaSource(filedName,filedType, tablename, packagename);
 	      
 	        byte[] data = compile(tablename, source);
 	        	        
@@ -416,22 +318,56 @@ public class JavaSourceUtil {
 	    }
 	 
 	    public static void main(String[] args) {
-			String tablename = "Person";	    	
+//			String tablename = "Person";	    	
+//	        String define = "String name;int age;String prov;";
+//	    	String source = makeJavaSource(define, tablename); 
+//	    	System.out.println(source);
+	    	
+	    	String tablename = "Person";
+	    	
 	        String define = "String name;int age;String prov;";
-	        Map<String,String> tableDefine = new HashMap<String,String>();
-	        for(String segment : define.split(";"))
-	        {	        	
-	        	String []s = segment.split(" ");
-	        	if(s.length==2)
-	        	{
-	        		if(tableDefine.containsKey(s[1]))
-	        			return ;
-	        		tableDefine.put(s[1], s[0]);
-	        	}	
-	        	
-	        }
-	    	String source = makeJavaSource(tableDefine, tablename); 
-	    	System.out.println(source);
+	       
+	        try {
+	        	 SparkTable table = new SparkTable("Person",define);
+	  	       		table.createTable();
+	  	       	System.out.println("success");
+			} catch (SclibException e) {
+				System.out.println(e.getMessage());
+			}
+	      
+	         tablename = "SubPerson";
+	    	
+	         define = "String name;String type";
+	       
+	        try {
+	        	 SparkTable table = new SparkTable("SubPerson",define);
+	  	       		table.createTable();
+	  	       	System.out.println("success");
+			} catch (SclibException e) {
+				System.out.println(e.getMessage());
+			}
+	        
+//	        System.out.println(JavaSourceUtil.getJarPath(define, tablename));
+//	        
+//	        tablename = "SubPerson";
+//	    	
+//	        define = "String name;int age;";
+//
+//	        System.out.println(JavaSourceUtil.getJarPath(define, tablename));
+//	    	
+//	    	try {
+//	    		Class cl = Class.forName("com.kzx.dw.Person");
+//	    		Object t1 = cl.newInstance();
+//	    		
+//	    		for(String s: (String[])t1.getClass().getMethod("getFields",null).invoke(t1,null))
+//	    		{
+//	    			System.out.println("s=" +s);
+//	    			
+//	    		}
+//			} catch (Exception e) {
+//				// TODO: handle exception
+//			}
+	    	
 	       
 	    }
 
