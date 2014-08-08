@@ -28,46 +28,38 @@ import com.kzx.dw.util.JavaSourceUtil;
 public class DataSetTest {
 	public static void main(String[] args) {
 		try {
-			String tablename = "Person";
-	    	
+			String tablename = "Person";	    	
 	        String define = "String name;int age;String prov;";
-	       
-			 SparkTable Person = new SparkTable(tablename,define);
-			 
-			 tablename = "SubPerson";
-		    	
-	         define = "String name;int type";
-	       
-			 SparkTable SubPerson = new SparkTable(tablename,define);
-	
-		
-		
-       
+			SparkTable Person = new SparkTable(tablename,define);
+			tablename = "SubPerson";
+			define = "String name;int type";
+			SparkTable SubPerson = new SparkTable(tablename,define);
 
 		
-	SparkConf conf = new SparkConf();
-	conf.setAppName("test");
-	conf.setMaster("yarn-cluster");
-	conf.setSparkHome("/usr/local/spark");
+			SparkConf conf = new SparkConf();
+			conf.setAppName("test");
+			conf.setMaster("yarn-cluster");
+			conf.setSparkHome("/usr/local/spark");
 
 	
-		JavaSparkContext sc = new JavaSparkContext(conf);
+			JavaSparkContext sc = new JavaSparkContext(conf);
 
-		final JavaSQLContext stx = new JavaSQLContext(sc);
-		JavaRDD<String> personrdd = sc.textFile("/tmp/person");
-		JavaRDD<?> persondata = DataSetLoader.toRdd(personrdd,  Class.forName(Person.getClassName()), Person.getFieldName());
+			final JavaSQLContext stx = new JavaSQLContext(sc);
+			JavaRDD<String> personrdd = sc.textFile("/tmp/person");
+			JavaRDD<?> persondata = DataSetLoader.toRdd(personrdd,  Class.forName(Person.getClassName()), Person.getFieldName());
 		
-		JavaRDD<String> subpersonrdd = sc.textFile("/tmp/subperson");
-		JavaRDD<?> subpersondata = DataSetLoader.toRdd(subpersonrdd,  Class.forName(SubPerson.getClassName()), SubPerson.getFieldName());
+			JavaRDD<String> subpersonrdd = sc.textFile("/tmp/subperson");
+			JavaRDD<?> subpersondata = DataSetLoader.toRdd(subpersonrdd,  Class.forName(SubPerson.getClassName()), SubPerson.getFieldName());
 
 			
 			Class[] cl = {Class.forName(Person.getClassName()),Class.forName(SubPerson.getClassName())};
 			JavaRDD[] r = {persondata,subpersondata};
 			
-			JavaSchemaRDD schema = DataSetAnalyzer.sql(stx, cl, r,"select t1.name as a,t2.type as b from Person t1 join SubPerson t2 where t1.name=t2.name");
-			for(String sub : DataSetLoader.schemaRDDToString(schema, Class.forName(SubPerson.getClassName()),SubPerson.getFieldName()).collect())
+			JavaSchemaRDD schema = DataSetAnalyzer.sql(stx, cl, r,"select a,b from (select t1.name as a,t1.age as age,t2.type as b from Person t1 join SubPerson t2 where t1.name=t2.name) t1");
+			DataSetOutPut.outPutJavaSchemaRDDToHdfs(schema,cl[1],SubPerson.getFieldName());
+			for(Object sub : DataSetLoader.schemaRDDToT(schema, Class.forName(SubPerson.getClassName()),SubPerson.getFieldName()).collect())
 			{
-				System.out.println("subname11111=" + sub);
+				System.out.println("subname2222=" + sub);
 			}
 			
 			

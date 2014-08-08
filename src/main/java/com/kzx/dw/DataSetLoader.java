@@ -7,10 +7,6 @@
 package com.kzx.dw;
 
 import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.spark.api.java.JavaRDD;
@@ -18,47 +14,10 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.sql.api.java.JavaSchemaRDD;
 import org.apache.spark.sql.api.java.Row;
 
-import scala.Array;
-
 public class DataSetLoader implements Serializable{
 
 	/**
-	 *@Description: 通用String类型RDD转成指定类型（T）RDD
-	 *@param rdd
-	 *@return
-	 */
-	public static <T> JavaRDD<T> rddStringToT(JavaRDD<String> rdd, final Class<T> cl, final List<String> fieldsName){
-		return rdd.map(new Function<String, T>() {
-			/* (non-Javadoc)
-			 * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)
-			 */
-			@Override
-			public T call(String v1) throws Exception {
-				T t1= (T)cl.newInstance();		
-				String[] values =v1.split("\\t");				
-				int i=0;
-				for(String filedName : fieldsName)
-				{
-					String value = values[i];
-					String setName = filedName.substring(0,1).toUpperCase() + filedName.substring(1); 						
-					Class<?> type = t1.getClass().getDeclaredField(filedName).getType();						
-					if(type.getName().equals("java.lang.String"))
-						t1.getClass().getMethod("set"+setName,type).invoke(t1, value);
-					else if(type.getName().equals("int"))				
-						t1.getClass().getMethod("set"+setName,type).invoke(t1, Integer.parseInt(value));
-					else if(type.getName().equals("float"))				
-						t1.getClass().getMethod("set"+setName,type).invoke(t1, Float.parseFloat(value));
-					else if(type.getName().equals("double"))				
-						t1.getClass().getMethod("set"+setName,type).invoke(t1, Double.parseDouble(value));
-					i++;
-				}				
-				return t1;
-			}
-		});				
-	}
-	
-	/**
-	 *@Description: 转成RDD
+	 *@Description: JavaRDD<String> 转成avaRDD<T>
 	 *@param rdd
 	 *@return
 	 */
@@ -98,35 +57,7 @@ public class DataSetLoader implements Serializable{
 	 *@param schema
 	 *@return
 	 */
-	public static <T> JavaRDD<String> schemaRDDToString(JavaSchemaRDD schemaRdd, final Class<T> cl, final List<String> fieldsName){
-		return schemaRdd.map(new Function<Row, String>() {
-			/* (non-Javadoc)
-			 * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)
-			 */
-			@Override
-			public String call(Row row) throws Exception {
-				T t1= (T)cl.newInstance();		
-				int i=0;
-				for(String filedName : fieldsName)
-				{
-					Object filed = row.get(i);
-					String setName = filedName.substring(0,1).toUpperCase() + filedName.substring(1); 
-					Class<?> type = t1.getClass().getDeclaredField(filedName).getType();
-					t1.getClass().getMethod("set"+setName,type).invoke(t1, filed);
-					i++;
-				}				
-				return t1.toString();
-			}
-		});				
-	}
-	
-	
-	/**
-	 *@Description: 通用JavaSchemaRDD类型RDD转成指定类型（T）RDD
-	 *@param schema
-	 *@return
-	 */
-	public static <T> JavaRDD<T> schemaRDDToT(JavaSchemaRDD schemaRdd, final Class<T> cl, final List<String> fieldsName){
+	public static <T> JavaRDD schemaRDDToT(JavaSchemaRDD schemaRdd, final Class<T> cl, final List<String> fieldsName){
 		return schemaRdd.map(new Function<Row, T>() {
 			/* (non-Javadoc)
 			 * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)
@@ -135,17 +66,17 @@ public class DataSetLoader implements Serializable{
 			public T call(Row row) throws Exception {
 				T t1= (T)cl.newInstance();						
 				int i=0;
-//				for(String filedName :cl.getAnnotation(MetaAnnotation.class).name())
-//				{
-//					Object filed = row.get(i);
-//					String setName = filedName.substring(0,1).toUpperCase() + filedName.substring(1); 
-//						
-//					Class<?> type = t1.getClass().getDeclaredField(filedName).getType();
-//
-//					t1.getClass().getMethod("set"+setName,type).invoke(t1, filed);
-//					
-//					i++;
-//				}				
+				for(String filedName :fieldsName)
+				{
+					Object filed = row.get(i);
+					String setName = filedName.substring(0,1).toUpperCase() + filedName.substring(1); 
+						
+					Class<?> type = t1.getClass().getDeclaredField(filedName).getType();
+
+					t1.getClass().getMethod("set"+setName,type).invoke(t1, filed);
+					
+					i++;
+				}				
 				return t1;
 			}
 		});				
