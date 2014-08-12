@@ -14,6 +14,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
+
 import javax.tools.DiagnosticCollector;
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileManager;
@@ -24,11 +25,14 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import javax.tools.JavaFileObject.Kind;
+
+import org.apache.log4j.Logger;
+
 import com.kzx.dw.SclibException;
 import com.kzx.dw.SparkTable;
 
 public class JavaSourceUtil {
-	 
+		protected static Logger logger = Logger.getLogger(JavaSourceUtil.class);
 	    private static final String GET = "get";
 	    private static final String SET = "set";
 
@@ -312,7 +316,7 @@ public class JavaSourceUtil {
 		    	  return cl;
 			       
 			} catch (Exception e) {
-				LogUtil.UTILLOG.error("JavaSourceUtil#getClass error" ,e );
+				logger.error(e);
 			}  
 		    return null;
 	    }

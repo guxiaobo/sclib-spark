@@ -13,11 +13,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import com.kzx.dw.util.CommandUtil;
 import com.kzx.dw.util.JavaSourceUtil;
-import com.kzx.dw.util.LogUtil;
 
 public class SparkTable {
+	
+	protected static Logger logger = Logger.getLogger(SparkTable.class);
 	
 	private String dbname = "bean";
 	private String tablename;
@@ -93,7 +96,7 @@ public class SparkTable {
 		    System.out.println(CommandUtil.execute("jar cvf " + getJarPath()  +" " + getClassPath()));
 			       
 		} catch (Exception e) {
-			LogUtil.UTILLOG.error("JavaSourceUtil#getJarPath error" ,e );
+			logger.error(e);
 		}  
 	}
                

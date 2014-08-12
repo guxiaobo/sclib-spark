@@ -11,9 +11,12 @@ import java.io.LineNumberReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
+import org.apache.log4j.Logger;
+
 
 
 public class CommandUtil {
+	protected static Logger logger = Logger.getLogger(CommandUtil.class);
 	
 	/*
      *执行命令行
@@ -59,7 +62,8 @@ public class CommandUtil {
 			}
 
 		} catch (Exception e) {
-			LogUtil.UTILLOG.error("CommandUtil#execute error" ,e );
+			logger.error(e);
+			
 		}
 		
 		
