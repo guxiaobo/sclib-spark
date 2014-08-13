@@ -5,28 +5,90 @@
 * @date 2014年8月7日 下午3:02:21 
  */
 package com.kzx.dw;
-
 import java.util.HashMap;
 import java.util.Map;
-
-
+import com.kzx.dw.util.FileUtil;
 
 public class SparkTableManager {
 	
-	private static Map<String, SparkTable> sparkTableMap = new HashMap<String,SparkTable>();
+	private  Map<String, SparkTable> sparkTableMap = new HashMap<String,SparkTable>();
+	private  String rootDir;
 	
-	public static void register(SparkTable table)
+	public SparkTableManager(){}
+	
+	public void init(String path) throws SclibException
 	{
-		sparkTableMap.put(table.getDbname()+"."+table.getTablename(), table);
+		if(path.endsWith("/")||path.endsWith("\\"))
+		{
+			rootDir = path.substring(0,path.length()-2);
+		}
+		
+		else
+			rootDir = path;
+		
+		if(!FileUtil.mkDir(rootDir))
+		{
+			throw new SclibException("spark table目录初始化失败");
+		}
 	}
 	
-	public static void unregister(SparkTable table)
+	
+	public void register(String dbname,String tablename, String tabledefine, boolean overwrite) throws SclibException
 	{
-		sparkTableMap.remove(table.getDbname()+"." +table.getTablename());
+		if(overwrite)
+		{
+			delTable(dbname, tablename);
+		}
+		
+		if(!isExistTable(dbname, tablename))
+		{
+			if(!FileUtil.mkDir(new String[]{rootDir,dbname}))
+			{
+				throw new SclibException("spark table目录" +dbname+"创建失败");
+			}
+			
+			SparkTable table = new SparkTable(dbname,tablename, tabledefine,rootDir);
+			table.createTable();
+			sparkTableMap.put(dbname+"." + tablename, table);
+		}
+		
+			
 	}
 	
+	//table存在标准：定义文件、class文件、jar文件都在
+	private boolean isExistTable(String dbname, String tablename)
+	{
+		if(FileUtil.isExist(new String[]{rootDir,dbname}, tablename+".class") && FileUtil.isExist(new String[]{rootDir,dbname}, tablename+".jar"))
+			return true;
+		else
+		{
+			FileUtil.delFile(new String[]{rootDir,dbname}, tablename+".class");
+			FileUtil.delFile(new String[]{rootDir,dbname}, tablename+".jar");
+		}
+		return false;
+	}
 	
+	private boolean delTable(String dbname, String tablename) throws SclibException
+	{
+		if(FileUtil.delFile(new String[]{rootDir,dbname}, tablename+".class") && FileUtil.delFile(new String[]{rootDir,dbname}, tablename+".jar"))
+			return true;
+		return false;
+	}
 	
-
+	public void register(String dbname, String tablename, String tabledefine) throws SclibException
+	{		
+		register("spark", tablename,tabledefine,false);
+	}
+	
+	public void register(String tablename, String tabledefine) throws SclibException
+	{
+		register("spark", tablename,tabledefine,false);
+	}
+	
+	public void register(String tablename, String tabledefine, boolean overwrite) throws SclibException
+	{
+		register("spark", tablename,tabledefine,overwrite);
+	}
+	
 }
 

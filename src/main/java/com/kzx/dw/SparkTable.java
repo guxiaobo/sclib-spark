@@ -16,7 +16,9 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import com.kzx.dw.util.CommandUtil;
+import com.kzx.dw.util.FileUtil;
 import com.kzx.dw.util.JavaSourceUtil;
+import com.kzx.dw.util.OSUtil;
 
 public class SparkTable {
 	
@@ -24,27 +26,22 @@ public class SparkTable {
 	
 	private String dbname = "bean";
 	private String tablename;
+	private String tabledefine;
 	private List<String> fieldName = new ArrayList<String>();
 	private List<String> fieldType = new ArrayList<String>();
-	private static final String TABLEDIR="/tmp/sclib/";
-	private static final String TABLEPACKAGE="tmp.sclib.";
+	private String rootDir;
 	
-	
-	public SparkTable(String tablename, String tabledefine) throws SclibException
-	{
-		this.tablename = tablename;	
-		init(tabledefine);
-	}
-	
-	public SparkTable(String dbname, String tablename, String tabledefine) throws SclibException
+
+	public SparkTable(String dbname, String tablename, String tabledefine, String rootDir)
 	{
 		this.dbname = dbname;
 		this.tablename = tablename;	
-		init(tabledefine);
-		
+		this.rootDir = rootDir;	
+		this.tabledefine = tabledefine;
 	}
 	
-	private void init(String tabledefine) throws SclibException
+	
+	public void createTable() throws SclibException
 	{
 		Set<String> defineSet = new HashSet<String>();       
         for(String segment : tabledefine.split(";"))
@@ -61,40 +58,28 @@ public class SparkTable {
         		fieldType.add(s[0]);
         	}	
         } 
-	}
-	
-	public void createTable()
-	{
-        //生成table对应的jar包       
-	    String source = JavaSourceUtil.makeJavaSource(fieldName, fieldType ,tablename, getPackageName());	      
+		
+		//生成table对应的jar包       
+	    String source = JavaSourceUtil.makeJavaSource(fieldName, fieldType ,tablename, getPackageName());
+	    logger.debug(source);
 	    byte[] data = JavaSourceUtil.compile(tablename, source); 
 		try 
 		{
-		    File f=new File(getClassDir());
-		    if(!f.isDirectory())
-		    {
-		    	mkDir(f);
-		    }
-
-		    f=new File(getClassPath());
-		    if(!f.exists())
-		    {
-		    	f.createNewFile();
-		    }
-		    else
-		    {
-		    	f.delete();
-		    	f.createNewFile();
-		    }
-		    		               
+		    logger.debug(getTableClassAbsolutePath());
+			File f=new File(getTableClassAbsolutePath());
 		    FileOutputStream fos=new FileOutputStream(f);
 		    fos.write(data);
 		    fos.close();
-		    CommandUtil.execute("rm "+ getJarPath());
-		    System.out.println("rm "+ getJarPath());
-		    System.out.println("cd " + TABLEDIR +";jar cvf " + getJarPath()  +" " + getClassPath());
-		    System.out.println(CommandUtil.execute("jar cvf " + getJarPath()  +" " + getClassPath()));
-			       
+		    if(OSUtil.isWin())
+		    {
+		    	logger.debug("cd /d " + rootDir +" && jar cvf " + getTableJarPath()  +" " + getTableClassPath());
+		    	logger.debug(CommandUtil.execute("cd /d " + rootDir +" && jar cvf " + getTableJarPath()  +" " + getTableClassPath()));
+		    }
+		    else
+		    {
+		    	logger.debug("cd " + rootDir +";jar cvf " + getTableJarPath()  +" " + getTableClassPath());
+		    	logger.debug(CommandUtil.execute("cd " + rootDir +";jar cvf " + getTableJarPath()  +" " + getTableClassPath()));
+		    }   
 		} catch (Exception e) {
 			logger.error(e);
 		}  
@@ -117,31 +102,32 @@ public class SparkTable {
 	//得到表对应的包名 
 	private String getPackageName()
 	{
-		return TABLEPACKAGE + dbname;
+		return dbname;
 	}
 	
 	//得到表对应Class全名 
-	public String getClassName()
+	public String getTableClassName()
 	{
-		return TABLEPACKAGE + dbname + "." + tablename;
+		return dbname + "." + tablename;
 	}
 	
-	//得到表对应class文件的目录名字 
-	private String getClassDir()
+
+	//得到表对应class文件相对路径
+	private String getTableClassPath()
 	{
-		return TABLEDIR + dbname;
-	}
-			
-	//得到表对应class文件路径
-	private String getClassPath()
-	{
-		return TABLEDIR + dbname + "/" + tablename + ".class";
+		return FileUtil.getFilePath(new String[]{dbname}, tablename+".class");
 	}
 	
-	//得到表对应jar文件路径
-	private String getJarPath()
+	//得到表对应class文件绝对路径
+	private String getTableClassAbsolutePath()
 	{
-		return TABLEDIR + dbname + "/" + tablename + ".jar";
+		return FileUtil.getFilePath(new String[]{rootDir,dbname}, tablename+".class");
+	}
+	
+	//得到表对应jar文件相对路径
+	private String getTableJarPath()
+	{
+		return FileUtil.getFilePath(new String[]{dbname}, tablename+".jar");
 	}
 	
 	public String getDbname() {

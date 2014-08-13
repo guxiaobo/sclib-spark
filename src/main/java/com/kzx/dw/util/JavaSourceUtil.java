@@ -322,34 +322,34 @@ public class JavaSourceUtil {
 	    }
 	 
 	    public static void main(String[] args) {
-//			String tablename = "Person";	    	
+////			String tablename = "Person";	    	
+////	        String define = "String name;int age;String prov;";
+////	    	String source = makeJavaSource(define, tablename); 
+////	    	System.out.println(source);
+//	    	
+//	    	String tablename = "Person";
+//	    	
 //	        String define = "String name;int age;String prov;";
-//	    	String source = makeJavaSource(define, tablename); 
-//	    	System.out.println(source);
-	    	
-	    	String tablename = "Person";
-	    	
-	        String define = "String name;int age;String prov;";
-	       
-	        try {
-	        	 SparkTable table = new SparkTable("Person",define);
-	  	       		table.createTable();
-	  	       	System.out.println("success");
-			} catch (SclibException e) {
-				System.out.println(e.getMessage());
-			}
-	      
-	         tablename = "SubPerson";
-	    	
-	         define = "String name;String type";
-	       
-	        try {
-	        	 SparkTable table = new SparkTable("SubPerson",define);
-	  	       		table.createTable();
-	  	       	System.out.println("success");
-			} catch (SclibException e) {
-				System.out.println(e.getMessage());
-			}
+//	       
+//	        try {
+//	        	 SparkTable table = new SparkTable("Person",define);
+//	  	       		table.createTable();
+//	  	       	System.out.println("success");
+//			} catch (SclibException e) {
+//				System.out.println(e.getMessage());
+//			}
+//	      
+//	         tablename = "SubPerson";
+//	    	
+//	         define = "String name;String type";
+//	       
+//	        try {
+//	        	 SparkTable table = new SparkTable("SubPerson",define);
+//	  	       		table.createTable();
+//	  	       	System.out.println("success");
+//			} catch (SclibException e) {
+//				System.out.println(e.getMessage());
+//			}
 	        
 //	        System.out.println(JavaSourceUtil.getJarPath(define, tablename));
 //	        

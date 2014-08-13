@@ -23,9 +23,19 @@ public class CommandUtil {
      */
 	public static String execute(String sendCommand) {
 		try {
+			
+			String command;
+			if(OSUtil.isWin())
+			{
+				command = "cmd /c " + sendCommand;
+			}
+			else
+			{
+				command = "/bin/bash";
+			}
+			
 			Runtime rt = Runtime.getRuntime();
-			String command = "/bin/bash";
-			Process child = rt.exec(command);
+			Process child = rt.exec(command);			
 			OutputStream out = child.getOutputStream();
 			OutputStreamWriter writer = null;
 			try {
