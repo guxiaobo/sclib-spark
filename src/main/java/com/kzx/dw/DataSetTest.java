@@ -6,6 +6,8 @@
  */
 package com.kzx.dw;
 
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -28,41 +30,46 @@ import com.kzx.dw.util.JavaSourceUtil;
 public class DataSetTest {
 	public static void main(String[] args) {
 		try {
-			String tablename = "Person";	    	
-	        String define = "String name;int age;String prov;";
-			SparkTable Person = new SparkTable(tablename,define);
-			tablename = "SubPerson";
-			define = "String name;int type";
-			SparkTable SubPerson = new SparkTable(tablename,define);
-
-		
+			
+			SparkTableManager manager = new SparkTableManager();
+			manager.init("/tmp/sc");
+			String tablename = "Person";	
+			String tabledefine = "String name;int age;String prov;";
+			manager.register(tablename, tabledefine,true);
+			
 			SparkConf conf = new SparkConf();
 			conf.setAppName("test");
-			conf.setMaster("yarn-cluster");
-			conf.setSparkHome("/usr/local/spark");
-
+			conf.setMaster("local");
 	
+			conf.setJars(new String[]{manager.getSparkTable(tablename).getTableJarAbsolutePath()});
+			
+			
+            
 			JavaSparkContext sc = new JavaSparkContext(conf);
 
+			
+			URL url1 = new URL("file://"+manager.getSparkTable(tablename).getTableJarAbsolutePath());  
+            URLClassLoader myClassLoader1 = new URLClassLoader(new URL[] { url1 }, Thread.currentThread()  
+                    .getContextClassLoader());              
+           Class cl = myClassLoader1.loadClass(manager.getSparkTable(tablename).getTableClassName());
+			
+           
+           
 			final JavaSQLContext stx = new JavaSQLContext(sc);
-			JavaRDD<String> personrdd = sc.textFile("/tmp/person");
-			JavaRDD<?> persondata = DataSetLoader.toRdd(personrdd,  Class.forName(Person.getClassName()), Person.getFieldName());
-		
-			JavaRDD<String> subpersonrdd = sc.textFile("/tmp/subperson");
-			JavaRDD<?> subpersondata = DataSetLoader.toRdd(subpersonrdd,  Class.forName(SubPerson.getClassName()), SubPerson.getFieldName());
-
+			JavaRDD<String> personrdd = sc.textFile("person");
+			JavaRDD<?> persondata = DataSetLoader.toRdd(personrdd,cl , manager.getSparkTable(tablename).getFieldName());
+			System.out.println("count=" + persondata.count());	
+			System.out.println("name11111111111=" + cl.getName());
 			
-			Class[] cl = {Class.forName(Person.getClassName()),Class.forName(SubPerson.getClassName())};
-			JavaRDD[] r = {persondata,subpersondata};
-			
-			JavaSchemaRDD schema = DataSetAnalyzer.sql(stx, cl, r,"select a,b from (select t1.name as a,t1.age as age,t2.type as b from Person t1 join SubPerson t2 where t1.name=t2.name) t1");
-			DataSetOutPut.outPutJavaSchemaRDDToHdfs(schema,cl[1],SubPerson.getFieldName());
-			for(Object sub : DataSetLoader.schemaRDDToT(schema, Class.forName(SubPerson.getClassName()),SubPerson.getFieldName()).collect())
-			{
-				System.out.println("subname2222=" + sub);
-			}
-			
-			
+//			Class[] cls = {cl};
+//			JavaRDD[] r = {persondata};
+//			
+//			JavaSchemaRDD schema = DataSetAnalyzer.sql(stx, cls, r,"select name,age,prov from Person");
+//			System.out.println("name222222222222=" + cl.getName());
+//			for(Object sub : DataSetLoader.schemaRDDToT(schema,cl ,manager.getSparkTable(tablename).getFieldName()).collect())
+//			{
+//				System.out.println("subname2222=" + sub);
+//			}		
 		} catch (Exception e) {
 			System.out.println(e);
 		}

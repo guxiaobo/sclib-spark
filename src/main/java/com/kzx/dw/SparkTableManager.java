@@ -40,19 +40,26 @@ public class SparkTableManager {
 			delTable(dbname, tablename);
 		}
 		
+		SparkTable table = new SparkTable(dbname,tablename, tabledefine,rootDir);
 		if(!isExistTable(dbname, tablename))
 		{
 			if(!FileUtil.mkDir(new String[]{rootDir,dbname}))
 			{
 				throw new SclibException("spark table目录" +dbname+"创建失败");
 			}
-			
-			SparkTable table = new SparkTable(dbname,tablename, tabledefine,rootDir);
 			table.createTable();
-			sparkTableMap.put(dbname+"." + tablename, table);
 		}
-		
-			
+		sparkTableMap.put(dbname+"." + tablename, table);					
+	}
+	
+	public SparkTable getSparkTable(String tablename)
+	{
+		return getSparkTable("spark",tablename);
+	}
+	
+	public SparkTable getSparkTable(String dbname,String tablename)
+	{
+		return sparkTableMap.get(dbname+"."+tablename);
 	}
 	
 	//table存在标准：定义文件、class文件、jar文件都在

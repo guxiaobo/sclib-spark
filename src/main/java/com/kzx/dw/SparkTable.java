@@ -24,25 +24,18 @@ public class SparkTable {
 	
 	protected static Logger logger = Logger.getLogger(SparkTable.class);
 	
-	private String dbname = "bean";
+	private String dbname;
 	private String tablename;
-	private String tabledefine;
 	private List<String> fieldName = new ArrayList<String>();
 	private List<String> fieldType = new ArrayList<String>();
 	private String rootDir;
 	
 
-	public SparkTable(String dbname, String tablename, String tabledefine, String rootDir)
+	public SparkTable(String dbname, String tablename, String tabledefine, String rootDir) throws SclibException
 	{
 		this.dbname = dbname;
 		this.tablename = tablename;	
 		this.rootDir = rootDir;	
-		this.tabledefine = tabledefine;
-	}
-	
-	
-	public void createTable() throws SclibException
-	{
 		Set<String> defineSet = new HashSet<String>();       
         for(String segment : tabledefine.split(";"))
         {	        	
@@ -58,10 +51,14 @@ public class SparkTable {
         		fieldType.add(s[0]);
         	}	
         } 
-		
+	}
+	
+	
+	public void createTable() throws SclibException
+	{
 		//生成table对应的jar包       
 	    String source = JavaSourceUtil.makeJavaSource(fieldName, fieldType ,tablename, getPackageName());
-	    logger.debug(source);
+	    logger.info(source);
 	    byte[] data = JavaSourceUtil.compile(tablename, source); 
 		try 
 		{
@@ -128,6 +125,12 @@ public class SparkTable {
 	private String getTableJarPath()
 	{
 		return FileUtil.getFilePath(new String[]{dbname}, tablename+".jar");
+	}
+	
+	//得到表对应jar文件绝对路径
+	public String getTableJarAbsolutePath()
+	{
+		return FileUtil.getFilePath(new String[]{rootDir,dbname}, tablename+".jar");
 	}
 	
 	public String getDbname() {

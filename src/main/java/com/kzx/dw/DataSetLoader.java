@@ -58,6 +58,9 @@ public class DataSetLoader implements Serializable{
 	 *@return
 	 */
 	public static <T> JavaRDD schemaRDDToT(JavaSchemaRDD schemaRdd, final Class<T> cl, final List<String> fieldsName){
+		
+		System.out.println("test=" + cl.getSimpleName());
+		
 		return schemaRdd.map(new Function<Row, T>() {
 			/* (non-Javadoc)
 			 * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)

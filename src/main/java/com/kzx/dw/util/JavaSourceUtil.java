@@ -105,17 +105,15 @@ public class JavaSourceUtil {
 	        if (data == null) {
 	            return null;
 	        }
-//	        parent.getClassLoader()
-	        ClassLoader loader = new ClassLoader() {
+	        ClassLoader loader = new ClassLoader(parent.getClassLoader()) {
 	            @Override
 	            protected Class<?> findClass(String name)
 	                    throws ClassNotFoundException {
-	            	System.out.println("findname=" + name);
 	                return this.defineClass(name, data, 0, data.length);
 	            }
 	        };
 	        try {
-	            Class<?> nc = loader.loadClass("com.kzx.dw.bean."+ name);
+	            Class<?> nc = loader.loadClass(name);
 	            return nc;
 	        } catch (ClassNotFoundException e) {
 	            e.printStackTrace();
@@ -195,7 +193,7 @@ public class JavaSourceUtil {
 	        // class name & extends
 	        source.append("public class ").append(tablename).append(" implements Serializable ").append("\n{\n");
 	 
-	        source.append("static final long serialVersionUID = 12630484304578L;");
+	        source.append("\tstatic final long serialVersionUID = 12630484304578L;\n");
 
 	        // property 
 	        for(int i=0; i < filedName.size(); i++)
