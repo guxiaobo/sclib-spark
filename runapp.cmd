@@ -19,4 +19,4 @@ rem 设置输出数据表  表名||表定义||输出文件目录 （不设置就
 set OUTPUTPATH="e:\\test"
 
 
-cmd /V /E /C java -classpath "%ROOT_DIR%\spark\*;%JAR_DIR%\sclib-spark-0.0.1-SNAPSHOT.jar"  com.kzx.dw.DataSetApp %ROOT_DIR% %MASTER%  %SQL%  %INPUTTABLES% %OUTPUTTABLE%
+cmd /V /E /C java -classpath "%ROOT_DIR%\spark\*;%JAR_DIR%\sclib-spark-0.0.1-SNAPSHOT.jar"  com.kzx.dw.DataSetApp %ROOT_DIR% %MASTER%  %SQL%  %INPUTTABLES% %OUTPUTPATH%
