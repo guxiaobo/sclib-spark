@@ -30,6 +30,10 @@ public class SparkTableManager {
 		this.sc = sc;
 		this.stx = stx;
 	}
+	public SparkTableManager()
+	{
+	}
+	
 	
 	public void init(String path) throws SclibException
 	{
@@ -52,7 +56,8 @@ public class SparkTableManager {
 		register(dbname, tablename,tabledefine,null,overwrite);
 	}
 	
-	public void register(String dbname,String tablename, String tabledefine, String path, boolean overwrite) throws SclibException
+	
+	public void createTableJar(String dbname,String tablename, String tabledefine, String path, boolean overwrite) throws SclibException
 	{
 		if(overwrite)
 		{
@@ -67,12 +72,16 @@ public class SparkTableManager {
 				throw new SclibException("spark table目录" +dbname+"创建失败");
 			}
 			table.createTable();
-		}
-		
+		}	
+	}
+	
+	public void register(String dbname,String tablename, String tabledefine, String path, boolean overwrite) throws SclibException
+	{
+		SparkTable table = new SparkTable(dbname,tablename, tabledefine,rootDir);
 		try {
 			if(path!=null && path.length()>0)
 			{	
-				JavaRDD<String> rdd = sc.textFile(FileUtil.getPath(path));	
+				JavaRDD<String> rdd = sc.textFile(FileUtil.getPath(path));
 				Class cl = Class.forName(table.getTableClassName());
 				JavaRDD<?> Trdd = DataSetLoader.toRdd(rdd,cl ,table.getFieldName());
 				JavaSchemaRDD javaSch = stx.applySchema(Trdd, cl);

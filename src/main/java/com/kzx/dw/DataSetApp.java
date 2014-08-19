@@ -23,12 +23,7 @@ public class DataSetApp {
 	private static Logger logger = Logger.getLogger(DataSetApp.class);
 	public static void main(String[] args) {
 		try {
-			
-//			java -classpath '/tmp/sc/spark/*:sclib-spark/target/sclib-spark-0.0.1-SNAPSHOT.jar'  
-//			com.kzx.dw.DataSetTest /tmp/sc local[2] "person||String name;int age;String prov||/home/hdpusr/workspace/sclib-spark/person" 
-//			"select name,prov,age from person"  "age||String name;String prov;int age||/tmp/ds"
 
-			
 			if(args.length<4)
 			{
 				System.out.println("usage: rootdir master  sql intables [outpath]");

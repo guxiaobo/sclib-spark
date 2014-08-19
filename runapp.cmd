@@ -1,22 +1,17 @@
 @echo off
 
-rem 设置应用数据根目录
-set ROOT_DIR="e:\\sc"
+set ROOT_DIR="d:\\sc"
 
-rem 设置sclib-spark-0.0.1-SNAPSHOT.jar包目录
-set JAR_DIR="e:\\workspace\\sclib-spark\\target"
+set JAR_DIR="d:\\workspace\\sclib-spark\\target"
 
-rem 设置运行模式
 set MASTER="local[2]"
 
-rem 设置运行的sql
 set SQL="select name,prov,age from person"
 
-rem 设置输入数据表 格式    表名||表定义||表对应的输入文件||表名||表定义||表对应的输入文件||
-set INPUTTABLES="person||String name;int age;String prov||e:\\workspace\\sclib-spark\\person"
+set INPUTTABLES="person||String name;int age;String prov||d:\\workspace\\sclib-spark\\person"
 
-rem 设置输出数据表  表名||表定义||输出文件目录 （不设置就会直接输出结果到屏幕）
-set OUTPUTPATH="e:\\test"
+set OUTPUTPATH="d:\\test"
 
 
-cmd /V /E /C java -classpath "%ROOT_DIR%\spark\*;%JAR_DIR%\sclib-spark-0.0.1-SNAPSHOT.jar"  com.kzx.dw.DataSetApp %ROOT_DIR% %MASTER%  %SQL%  %INPUTTABLES% %OUTPUTPATH%
+cmd /V /E /C java -classpath "%JAR_DIR%\sclib-spark-0.0.1-SNAPSHOT.jar"  com.kzx.dw.CreateJar %ROOT_DIR% %INPUTTABLES%	
+cmd /V /E /C java -classpath "%ROOT_DIR%\spark\*;%JAR_DIR%\sclib-spark-0.0.1-SNAPSHOT.jar"  com.kzx.dw.DataSetApp %ROOT_DIR% %MASTER%  %SQL%  %INPUTTABLES% %OUTPUTPATH%		
