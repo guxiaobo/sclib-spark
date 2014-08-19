@@ -7,14 +7,29 @@
 package com.kzx.dw;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.log4j.Logger;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.sql.api.java.JavaSQLContext;
+import org.apache.spark.sql.api.java.JavaSchemaRDD;
+
 import com.kzx.dw.util.FileUtil;
+import com.kzx.dw.util.OSUtil;
 
 public class SparkTableManager {
 	
 	private  Map<String, SparkTable> sparkTableMap = new HashMap<String,SparkTable>();
 	private  String rootDir;
+	private  JavaSQLContext stx;
+	private  JavaSparkContext sc;
+	private static Logger logger = Logger.getLogger(SparkTableManager.class);
 	
-	public SparkTableManager(){}
+	public SparkTableManager(JavaSparkContext sc,JavaSQLContext stx)
+	{
+		this.sc = sc;
+		this.stx = stx;
+	}
 	
 	public void init(String path) throws SclibException
 	{
@@ -32,8 +47,12 @@ public class SparkTableManager {
 		}
 	}
 	
-	
 	public void register(String dbname,String tablename, String tabledefine, boolean overwrite) throws SclibException
+	{
+		register(dbname, tablename,tabledefine,null,overwrite);
+	}
+	
+	public void register(String dbname,String tablename, String tabledefine, String path, boolean overwrite) throws SclibException
 	{
 		if(overwrite)
 		{
@@ -49,7 +68,23 @@ public class SparkTableManager {
 			}
 			table.createTable();
 		}
-		sparkTableMap.put(dbname+"." + tablename, table);					
+		
+		try {
+			if(path!=null && path.length()>0)
+			{	
+				JavaRDD<String> rdd = sc.textFile(FileUtil.getPath(path));	
+				Class cl = Class.forName(table.getTableClassName());
+				JavaRDD<?> Trdd = DataSetLoader.toRdd(rdd,cl ,table.getFieldName());
+				JavaSchemaRDD javaSch = stx.applySchema(Trdd, cl);
+				stx.registerRDDAsTable(javaSch, tablename);
+			}
+		} catch (Exception e) {
+			logger.error("registerRDDAsTable error:",e);
+		}
+		
+		
+		sparkTableMap.put(dbname+"." + tablename, table);
+		logger.info("register table success:" + tablename);
 	}
 	
 	public SparkTable getSparkTable(String tablename)
@@ -82,20 +117,6 @@ public class SparkTableManager {
 		return false;
 	}
 	
-	public void register(String dbname, String tablename, String tabledefine) throws SclibException
-	{		
-		register("spark", tablename,tabledefine,false);
-	}
-	
-	public void register(String tablename, String tabledefine) throws SclibException
-	{
-		register("spark", tablename,tabledefine,false);
-	}
-	
-	public void register(String tablename, String tabledefine, boolean overwrite) throws SclibException
-	{
-		register("spark", tablename,tabledefine,overwrite);
-	}
-	
+
 }
 

@@ -99,4 +99,12 @@ public class FileUtil {
 		
 		logger.info("test");
 	}
+	
+	//兼容window文件路径
+	public static String getPath(String path)
+	{
+		if(OSUtil.isWin())
+			path.replace("\\", "\\\\");
+		return path;
+	}
 }

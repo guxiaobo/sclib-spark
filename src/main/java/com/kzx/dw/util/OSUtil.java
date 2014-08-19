@@ -36,5 +36,18 @@ public class OSUtil {
 		}
 		else
 			return false;
+		
+		
+		
+	}
+	
+	public static void main(String[] args) {
+		String outputtable="person||String name;String prov;int age||/temp/fs";
+
+		
+		for(String tablestring: outputtable.split("\\|\\|"))
+		{
+			System.out.println("table=" + tablestring);
+		}	
 	}
 }

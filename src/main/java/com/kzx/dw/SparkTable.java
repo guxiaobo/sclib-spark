@@ -58,8 +58,10 @@ public class SparkTable {
 	{
 		//生成table对应的jar包       
 	    String source = JavaSourceUtil.makeJavaSource(fieldName, fieldType ,tablename, getPackageName());
-	    logger.info(source);
-	    byte[] data = JavaSourceUtil.compile(tablename, source); 
+	    logger.debug(source);
+	    byte[] data = JavaSourceUtil.compile(tablename, source);
+	    if(data==null)
+	    	throw new SclibException("class file generate fail");
 		try 
 		{
 		    logger.debug(getTableClassAbsolutePath());
@@ -76,25 +78,13 @@ public class SparkTable {
 		    {
 		    	logger.debug("cd " + rootDir +";jar cvf " + getTableJarPath()  +" " + getTableClassPath());
 		    	logger.debug(CommandUtil.execute("cd " + rootDir +";jar cvf " + getTableJarPath()  +" " + getTableClassPath()));
-		    }   
+		    }  
+		   
 		} catch (Exception e) {
 			logger.error(e);
 		}  
 	}
                
-
-	//创建递归目录
-	private static void mkDir(File file)
-	{
-		if(file.getParentFile().exists())
-		{
-			file.mkdir();
-		}else
-		{
-			mkDir(file.getParentFile());
-			file.mkdir();
-		}
-	}
 	
 	//得到表对应的包名 
 	private String getPackageName()
@@ -156,8 +146,6 @@ public class SparkTable {
 	}
 	public void setFieldType(List<String> fieldType) {
 		this.fieldType = fieldType;
-	}
-	
-	
+	}	
 }
 

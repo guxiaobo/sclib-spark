@@ -20,13 +20,8 @@ public class DataSetAnalyzer {
 	 *@param columnName
 	 *@return
 	 */
-	public static <T> JavaSchemaRDD groupByKey(JavaSQLContext stx,final Class<T> cl, JavaRDD<T> rdd, String... columnName)
+	public static <T> JavaSchemaRDD groupByKey(JavaSQLContext stx,String tablename, String... columnName)
 	{
-		JavaSchemaRDD javaSch = 
-				stx.applySchema(rdd, cl);
-		String tablename = cl.getName();
-		stx.registerRDDAsTable(javaSch, tablename);
-		
 		String colStr="";
 		int i=0;
 		for(String col : columnName)
@@ -42,13 +37,8 @@ public class DataSetAnalyzer {
 		return result;
 	}
 	
-	public static <T> JavaSchemaRDD max(JavaSQLContext stx,final Class<T> cl, JavaRDD<T> rdd, String... columnName)
+	public static <T> JavaSchemaRDD max(JavaSQLContext stx,String tablename, String... columnName)
 	{
-		JavaSchemaRDD javaSch = 
-				stx.applySchema(rdd, cl);
-		String tablename = cl.getName();
-		stx.registerRDDAsTable(javaSch, tablename);
-		
 		String colStr="";
 		int i=0;
 		for(String col : columnName)
@@ -64,13 +54,8 @@ public class DataSetAnalyzer {
 		return result;
 	}
 	
-	public static <T> JavaSchemaRDD max1(JavaSQLContext stx,final Class<T> cl, JavaRDD rdd, String... columnName)
+	public static <T> JavaSchemaRDD max1(JavaSQLContext stx,String tablename, String... columnName)
 	{
-		
-		JavaSchemaRDD javaSch = stx.applySchema(rdd, cl);
-		String tablename = cl.getName();
-		stx.registerRDDAsTable(javaSch, tablename);
-		
 		String colStr="";
 		int i=0;
 		for(String col : columnName)
@@ -86,16 +71,8 @@ public class DataSetAnalyzer {
 		return result;
 	}
 	
-	public static JavaSchemaRDD sql(JavaSQLContext stx,final Class[] cl, JavaRDD[] rdd, String sql)
+	public static JavaSchemaRDD sql(JavaSQLContext stx, String sql)
 	{
-		for(int i=0;i<rdd.length; i++)
-		{
-			JavaSchemaRDD javaSch = stx.applySchema(rdd[i], cl[i]);
-			String tablename = cl[i].getSimpleName();
-			System.out.println("simplename" + tablename);
-			stx.registerRDDAsTable(javaSch, tablename);
-		}
-	
 		return stx.sql(sql);
 	}
 	
