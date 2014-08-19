@@ -42,30 +42,28 @@ public class DataSetOutPut {
 		}).saveAsTextFile(outPutDir);
 	}
 	
-	public static <T> void  outPutJavaSchemaRDDToLocal(JavaSchemaRDD schemaRdd, final Class<T> cl, final List<String> fieldsName, String outPutDir)
+	public static <T> void  outPutJavaSchemaRDDToLocal(JavaSchemaRDD schemaRdd, String outPutDir)
 	{
-		JavaRDD<T> rdd = schemaRdd.map(new Function<Row, T>() {
+		JavaRDD<String> rdd = schemaRdd.map(new Function<Row, String>()
+		{
 			/* (non-Javadoc)
 			 * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)
 			 */
 			@Override
-			public T call(Row row) throws Exception {
-				T t1= (T)cl.newInstance();		
-				int i=0;
-				for(String filedName : fieldsName)
+			public String call(Row v1) throws Exception {
+				// TODO Auto-generated method stub
+				StringBuilder s = new StringBuilder();
+				for(int i=0; i<v1.length(); i++)
 				{
-					Object filed = row.get(i);
-					String setName = filedName.substring(0,1).toUpperCase() + filedName.substring(1); 
-					Class<?> type = t1.getClass().getDeclaredField(filedName).getType();
-					t1.getClass().getMethod("set"+setName,type).invoke(t1, filed);
-					i++;
-				}				
-				return t1;
+					s.append(v1.get(i)).append("\t");
+				}
+				return s.toString();
 			}
 		});
+		
 		if(OSUtil.isWin())
 		{
-			rdd.saveAsTextFile("file:\\\\" + FileUtil.getPath(outPutDir));
+			rdd.saveAsTextFile("file:\\\\\\" + outPutDir);
 		}
 		else
 			rdd.saveAsTextFile("file://" + outPutDir);

@@ -16,7 +16,7 @@ rem 设置输入数据表 格式    表名||表定义||表对应的输入文件|
 set INPUTTABLES="person||String name;int age;String prov||e:\\workspace\\sclib-spark\\person"
 
 rem 设置输出数据表  表名||表定义||输出文件目录 （不设置就会直接输出结果到屏幕）
-set OUTPUTTABLE="age||String name;String prov;int age||e:\\test"
+set OUTPUTPATH="e:\\test"
 
 
 cmd /V /E /C java -classpath "%ROOT_DIR%\spark\*;%JAR_DIR%\sclib-spark-0.0.1-SNAPSHOT.jar"  com.kzx.dw.DataSetApp %ROOT_DIR% %MASTER%  %SQL%  %INPUTTABLES% %OUTPUTTABLE%

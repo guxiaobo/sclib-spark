@@ -18,8 +18,8 @@ JAR_DIR="/home/hdpusr/workspace/sclib-spark/target"
 MASTER="local[2]"
 SQL="select name,prov,age from person"
 INPUTTABLES="person||String name;int age;String prov||/home/hdpusr/workspace/sclib-spark/person"
-OUTPUTTABLE="age||String name;String prov;int age||/tmp/ds"
+OUTPUTTABLE="/tmp/ds"
 
-echo "$RUNNER" -cp "${ROOT_DIR}/spark/*:${JAR_DIR}/sclib-spark-0.0.1-SNAPSHOT.jar"  com.kzx.dw.DataSetApp ${ROOT_DIR} ${MASTER}  \"${SQL}\"  \"${INPUTTABLES}\" \"${OUTPUTTABLE}\"
+echo "$RUNNER" -class "${ROOT_DIR}/spark/*:${JAR_DIR}/sclib-spark-0.0.1-SNAPSHOT.jar"  com.kzx.dw.DataSetApp ${ROOT_DIR} ${MASTER}  \"${SQL}\"  \"${INPUTTABLES}\" \"${OUTPUTTABLE}\"
 
-exec "$RUNNER" -cp "${ROOT_DIR}/spark/*:${JAR_DIR}/sclib-spark-0.0.1-SNAPSHOT.jar"  com.kzx.dw.DataSetApp ${ROOT_DIR} ${MASTER}  \"${SQL}\"  \"${INPUTTABLES}\" \"${OUTPUTTABLE}\"
+exec "$RUNNER" -class "${ROOT_DIR}/spark/*:${JAR_DIR}/sclib-spark-0.0.1-SNAPSHOT.jar"  com.kzx.dw.DataSetApp ${ROOT_DIR} ${MASTER}  \"${SQL}\"  \"${INPUTTABLES}\" \"${OUTPUTTABLE}\"

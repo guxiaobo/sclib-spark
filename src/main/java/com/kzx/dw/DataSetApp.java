@@ -31,7 +31,7 @@ public class DataSetApp {
 			
 			if(args.length<4)
 			{
-				System.out.println("usage: rootdir master  sql intables [outtable]");
+				System.out.println("usage: rootdir master  sql intables [outpath]");
 				return;
 			}
 			
@@ -53,18 +53,12 @@ public class DataSetApp {
 			List<TableInfo> inList = TableStringUtil.getTableInfo(intables);
 			
 			
-			
-			//subperson||String name;String prov;int age||/tmp/fs 格式
-			List<TableInfo> outList = null;
+			String outpath = null;
 			if(args.length==5 && args[4].length()>0)
 			{
-				outList = TableStringUtil.getTableInfo(args[4]);
-				if(outList==null)
-					throw new Exception("outtable param is null");
+				outpath = args[4];
 			}
 
-			
-			
 			SparkConf conf = new SparkConf();
 			conf.setAppName("sparksql");
 			conf.setMaster(master);  
@@ -83,19 +77,12 @@ public class DataSetApp {
 				}
 			}
 			
-			if(outList!=null)
-			{
-				for(TableInfo info : outList)
-				{
-					manager.register("spark", info.getTablename(), info.getTabledefine(), true);
-				}
-			}
 			
 			JavaSchemaRDD schema = DataSetAnalyzer.sql(stx,sql);
 
 			
 			//不配置输出路径，默认使用console输出
-			if(outList==null || outList.size()==0)
+			if(outpath==null)
 			{
 				logger.info("output to console");
 				for(String s : DataSetOutPut.outPutJavaSchemaRDDToConsole(schema))
@@ -105,9 +92,8 @@ public class DataSetApp {
 			}
 			else 
 			{
-				SparkTable table = manager.getSparkTable(outList.get(0).getTablename());
 				logger.info("output to file");
-				DataSetOutPut.outPutJavaSchemaRDDToLocal(schema, Class.forName(table.getTableClassName()),table.getFieldName(),outList.get(0).getPath());
+				DataSetOutPut.outPutJavaSchemaRDDToLocal(schema,outpath);
 			}
 			
 		} catch (Exception e) {
