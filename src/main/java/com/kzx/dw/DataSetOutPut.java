@@ -22,10 +22,6 @@ public class DataSetOutPut {
 	public static <T> void  outPutJavaSchemaRDDToHdfs(JavaSchemaRDD schemaRdd, final Class<T> cl, final List<String> fieldsName, String outPutDir)
 	{
 		schemaRdd.map(new Function<Row, T>() {
-			/* (non-Javadoc)
-			 * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)
-			 */
-			@Override
 			public T call(Row row) throws Exception {
 				T t1= (T)cl.newInstance();		
 				int i=0;
@@ -46,10 +42,6 @@ public class DataSetOutPut {
 	{
 		JavaRDD<String> rdd = schemaRdd.map(new Function<Row, String>()
 		{
-			/* (non-Javadoc)
-			 * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)
-			 */
-			@Override
 			public String call(Row v1) throws Exception {
 				// TODO Auto-generated method stub
 				StringBuilder s = new StringBuilder();
@@ -74,10 +66,7 @@ public class DataSetOutPut {
 	{
 		return schemaRdd.map(new Function<Row, String>()
 		{
-			/* (non-Javadoc)
-			 * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)
-			 */
-			@Override
+			
 			public String call(Row v1) throws Exception {
 				// TODO Auto-generated method stub
 				StringBuilder s = new StringBuilder();

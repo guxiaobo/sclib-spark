@@ -23,10 +23,7 @@ public class DataSetLoader implements Serializable{
 	 */
 	public static <T>  JavaRDD toRdd(JavaRDD<String> rdd, final Class<T> cl, final List<String> fieldsName){
 		return rdd.map(new Function<String, Object>() {
-			/* (non-Javadoc)
-			 * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)
-			 */
-			@Override
+			
 			public Object call(String v1) throws Exception {
 				Object t1= cl.newInstance();		
 				String[] values =v1.split("\\t");				
@@ -62,10 +59,7 @@ public class DataSetLoader implements Serializable{
 		System.out.println("test=" + cl.getSimpleName());
 		
 		return schemaRdd.map(new Function<Row, T>() {
-			/* (non-Javadoc)
-			 * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)
-			 */
-			@Override
+			
 			public T call(Row row) throws Exception {
 				T t1= (T)cl.newInstance();						
 				int i=0;
