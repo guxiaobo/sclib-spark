@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+if [ -n "${JAVA_HOME}" ]; then
+  RUNNER="${JAVA_HOME}/bin/java"
+else
+  if [ `command -v java` ]; then
+    RUNNER="java"
+  else
+    echo "JAVA_HOME is not set" >&2
+    exit 1
+  fi
+fi
+
+
+echo "runner=$RUNNER"
+ROOT_DIR="/tmp/sc"
+JAR_DIR="/Users/xiaobogu/Documents/Github/sclib-spark/target"
+MASTER="local[1]"
+SQL="select name, prov, age from person"
+
+INPUTTABLES="person||String name;int age;String prov||/home/hdpusr/workspace/sclib-spark/person"
+OUTPUTTABLE="/tmp/ds"
+
+
+exec "$RUNNER" -classpath "${ROOT_DIR}/spark/*:${JAR_DIR}/sclib-spark-0.0.1-SNAPSHOT.jar"  com.kzx.dw.DataSetApp ${ROOT_DIR} ${MASTER}   \"${OUTPUTTABLE}\"

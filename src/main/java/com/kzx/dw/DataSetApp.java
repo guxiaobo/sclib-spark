@@ -38,10 +38,10 @@ public class DataSetApp {
 			
 			String rootdir = args[0];
 			String master = args[1];
-			String sql = args[2];
+			String sql = "select name, prov, age from person";
 			
 			
-			String intables = args[3];			
+			String intables = "person||String name;int age;String prov||/home/hdpusr/workspace/sclib-spark/person";			
 			//subperson||String name;String prov;int age||/tmp/fs 格式
 			if(intables==null || intables.length()<1)
 				throw new Exception("intables param is null");
@@ -49,9 +49,9 @@ public class DataSetApp {
 			
 			
 			String outpath = null;
-			if(args.length==5 && args[4].length()>0)
+			if(args.length==3 && args[2].length()>0)
 			{
-				outpath = args[4];
+				outpath = args[2];
 			}
 
 			SparkConf conf = new SparkConf();

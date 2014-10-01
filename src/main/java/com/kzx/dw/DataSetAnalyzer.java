@@ -6,11 +6,13 @@
  */
 package com.kzx.dw;
 
+import org.apache.log4j.Logger;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.api.java.JavaSQLContext;
 import org.apache.spark.sql.api.java.JavaSchemaRDD;
 
 public class DataSetAnalyzer {
+	private static Logger logger = Logger.getLogger(DataSetAnalyzer.class);
 	
 	/**
 	 *@Description: groupByKey
@@ -73,6 +75,7 @@ public class DataSetAnalyzer {
 	
 	public static JavaSchemaRDD sql(JavaSQLContext stx, String sql)
 	{
+		logger.debug(sql);
 		return stx.sql(sql);
 	}
 	
