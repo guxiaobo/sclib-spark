@@ -41,7 +41,14 @@ public class DataSetLoader implements Serializable{
 						t1.getClass().getMethod("set"+setName,type).invoke(t1, Float.parseFloat(value));
 					else if(type.getName().equals("double"))				
 						t1.getClass().getMethod("set"+setName,type).invoke(t1, Double.parseDouble(value));
-					
+					else if(type.getName().equals("boolean"))				
+						t1.getClass().getMethod("set"+setName,type).invoke(t1, Boolean.parseBoolean(value));
+					else if(type.getName().equals("byte"))				
+						t1.getClass().getMethod("set"+setName,type).invoke(t1, Byte.parseByte(value));
+					else if(type.getName().equals("short"))				
+						t1.getClass().getMethod("set"+setName,type).invoke(t1, Short.parseShort(value));
+					else if(type.getName().equals("long"))				
+						t1.getClass().getMethod("set"+setName,type).invoke(t1, Long.parseLong(value));
 					i++;
 				}				
 				return t1;
