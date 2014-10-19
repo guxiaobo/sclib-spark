@@ -13,119 +13,52 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.api.java.JavaSQLContext;
 import org.apache.spark.sql.api.java.JavaSchemaRDD;
+import org.apache.spark.sql.api.java.Row;
 
-import com.kzx.dw.util.FileUtil;
-import com.kzx.dw.util.OSUtil;
+import com.kzx.dw.bean.TableInfo;
+
+
 
 public class SparkTableManager {
 	
 	private  Map<String, SparkTable> sparkTableMap = new HashMap<String,SparkTable>();
-	private  String rootDir;
-	private  JavaSQLContext stx;
-	private  JavaSparkContext sc;
 	private static Logger logger = Logger.getLogger(SparkTableManager.class);
-	
+	private JavaSparkContext sc;
+	private JavaSQLContext stx;
+
+
 	public SparkTableManager(JavaSparkContext sc,JavaSQLContext stx)
 	{
 		this.sc = sc;
-		this.stx = stx;
-	}
-	public SparkTableManager()
-	{
+		this.stx= stx;
 	}
 	
 	
-	public void init(String path) throws SclibException
+	public void register(TableInfo info)
 	{
-		if(path.endsWith("/")||path.endsWith("\\"))
-		{
-			rootDir = path.substring(0,path.length()-2);
-		}
 		
-		else
-			rootDir = path;
-		
-		if(!FileUtil.mkDir(rootDir))
-		{
-			throw new SclibException("spark table目录初始化失败");
-		}
-	}
-	
-	public void register(String dbname,String tablename, String tabledefine, boolean overwrite) throws SclibException
-	{
-		register(dbname, tablename,tabledefine,null,overwrite);
-	}
-	
-	
-	public void createTableJar(String dbname,String tablename, String tabledefine, String path, boolean overwrite) throws SclibException
-	{
-		if(overwrite)
-		{
-			delTable(dbname, tablename);
-		}
-		
-		SparkTable table = new SparkTable(dbname,tablename, tabledefine,rootDir);
-		if(!isExistTable(dbname, tablename))
-		{
-			if(!FileUtil.mkDir(new String[]{rootDir,dbname}))
-			{
-				throw new SclibException("spark table目录" +dbname+"创建失败");
-			}
-			table.createTable();
-		}	
-	}
-	
-	public void register(String dbname,String tablename, String tabledefine, String path, boolean overwrite) throws SclibException
-	{
-		SparkTable table = new SparkTable(dbname,tablename, tabledefine,rootDir);
-		try {
-			if(path!=null && path.length()>0)
-			{	
-				JavaRDD<String> rdd = sc.textFile(FileUtil.getPath(path));
-				Class cl = Class.forName(table.getTableClassName());
-				JavaRDD<?> Trdd = DataSetLoader.toRdd(rdd,cl ,table.getFieldName());
-				JavaSchemaRDD javaSch = stx.applySchema(Trdd, cl);
-				stx.registerRDDAsTable(javaSch, tablename);
-			}
+		SparkTable table = new SparkTable(info.getTablename(), info.getTabledefine());
+		try {	
+			table.init();
+			JavaRDD<String> rdd = sc.textFile(info.getPath());
+			JavaRDD<Row> rowRDD = DataSetLoader.toRow(rdd);
+			System.out.println("=--------------------------=" + rowRDD.count());
+			JavaSchemaRDD peopleSchemaRDD = stx.applySchema(rowRDD, table.getSchema());
+			peopleSchemaRDD.registerTempTable(info.getTablename());
 		} catch (Exception e) {
 			logger.error("registerRDDAsTable error:",e);
+			return;
 		}
-		
-		
-		sparkTableMap.put(dbname+"." + tablename, table);
-		logger.info("register table success:" + tablename);
+		sparkTableMap.put(info.getTablename(), table);
+		logger.info("register table success:" + info.getTablename());
 	}
 	
 	public SparkTable getSparkTable(String tablename)
 	{
-		return getSparkTable("spark",tablename);
+		if(sparkTableMap!=null)
+			return sparkTableMap.get(tablename);
+		return null;
 	}
-	
-	public SparkTable getSparkTable(String dbname,String tablename)
-	{
-		return sparkTableMap.get(dbname+"."+tablename);
-	}
-	
-	//table存在标准：定义文件、class文件、jar文件都在
-	private boolean isExistTable(String dbname, String tablename)
-	{
-		if(FileUtil.isExist(new String[]{rootDir,dbname}, tablename+".class") && FileUtil.isExist(new String[]{rootDir,dbname}, tablename+".jar"))
-			return true;
-		else
-		{
-			FileUtil.delFile(new String[]{rootDir,dbname}, tablename+".class");
-			FileUtil.delFile(new String[]{rootDir,dbname}, tablename+".jar");
-		}
-		return false;
-	}
-	
-	private boolean delTable(String dbname, String tablename) throws SclibException
-	{
-		if(FileUtil.delFile(new String[]{rootDir,dbname}, tablename+".class") && FileUtil.delFile(new String[]{rootDir,dbname}, tablename+".jar"))
-			return true;
-		return false;
-	}
-	
 
 }
 

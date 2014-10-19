@@ -6,36 +6,35 @@
  */
 package com.kzx.dw;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.apache.spark.sql.api.java.DataType;
+import org.apache.spark.sql.api.java.StructField;
+import org.apache.spark.sql.api.java.StructType;
 
-import com.kzx.dw.util.CommandUtil;
-import com.kzx.dw.util.FileUtil;
-import com.kzx.dw.util.JavaSourceUtil;
-import com.kzx.dw.util.OSUtil;
 
 public class SparkTable {
 	
 	protected static Logger logger = Logger.getLogger(SparkTable.class);
-	
-	private String dbname;
+
 	private String tablename;
 	private List<String> fieldName = new ArrayList<String>();
 	private List<String> fieldType = new ArrayList<String>();
-	private String rootDir;
-	
+	private String tabledefine;
+	private StructType schema;
 
-	public SparkTable(String dbname, String tablename, String tabledefine, String rootDir) throws SclibException
-	{
-		this.dbname = dbname;
+	public SparkTable(String tablename, String tabledefine) 
+	{		
 		this.tablename = tablename;	
-		this.rootDir = rootDir;	
+		this.tabledefine = tabledefine;
+	}
+	
+	public void init() throws SclibException
+	{
 		Set<String> defineSet = new HashSet<String>();       
         for(String segment : tabledefine.split(";"))
         {	        	
@@ -51,84 +50,67 @@ public class SparkTable {
         		fieldType.add(s[0]);
         	}	
         } 
+        
+        List<StructField> fields = new ArrayList<StructField>();
+        for(int i=0; i<fieldName.size(); i++)
+        {
+        	if(fieldType.get(i).equalsIgnoreCase("string"))
+        	{
+        		fields.add(DataType.createStructField(fieldName.get(i), DataType.StringType, true));
+        	}
+        	else if(fieldType.get(i).equalsIgnoreCase("byte"))
+        	{
+        		fields.add(DataType.createStructField(fieldName.get(i), DataType.ByteType, true));
+        	}
+        	else if(fieldType.get(i).equalsIgnoreCase("short"))
+        	{
+        		fields.add(DataType.createStructField(fieldName.get(i), DataType.ShortType, true));
+        	}
+        	else if(fieldType.get(i).equalsIgnoreCase("int"))
+        	{
+        		fields.add(DataType.createStructField(fieldName.get(i), DataType.IntegerType, true));
+        	}
+        	else if(fieldType.get(i).equalsIgnoreCase("long"))
+        	{
+        		fields.add(DataType.createStructField(fieldName.get(i), DataType.LongType, true));
+        	}
+        	else if(fieldType.get(i).equalsIgnoreCase("float"))
+        	{
+        		fields.add(DataType.createStructField(fieldName.get(i), DataType.FloatType, true));
+        	}
+        	else if(fieldType.get(i).equalsIgnoreCase("double"))
+        	{
+        		fields.add(DataType.createStructField(fieldName.get(i), DataType.DoubleType, true));
+        	}
+        	else if(fieldType.get(i).equalsIgnoreCase("bigdecimal"))
+        	{
+        		fields.add(DataType.createStructField(fieldName.get(i), DataType.DecimalType, true));
+        	}
+        	else if(fieldType.get(i).equalsIgnoreCase("byte[]"))
+        	{
+        		fields.add(DataType.createStructField(fieldName.get(i), DataType.BinaryType, true));
+        	}
+        	else if(fieldType.get(i).equalsIgnoreCase("boolean"))
+        	{
+        		fields.add(DataType.createStructField(fieldName.get(i), DataType.BooleanType, true));
+        	}
+        	else if(fieldType.get(i).equalsIgnoreCase("timestamp"))
+        	{
+        		fields.add(DataType.createStructField(fieldName.get(i), DataType.TimestampType, true));
+        	}
+        	else if(fieldType.get(i).equalsIgnoreCase("list"))
+        	{
+        		fields.add(DataType.createStructField(fieldName.get(i),DataType.createArrayType(DataType.StringType, true),true));
+        	}
+        	else if(fieldType.get(i).equalsIgnoreCase("Map"))
+        	{
+        		fields.add(DataType.createStructField(fieldName.get(i),DataType.createMapType(DataType.StringType, DataType.StringType, true),true));
+        	}
+        	
+        }
+        schema = DataType.createStructType(fields);
 	}
 	
-	
-	public void createTable() throws SclibException
-	{
-		//生成table对应的jar包       
-	    String source = JavaSourceUtil.makeJavaSource(fieldName, fieldType ,tablename, getPackageName());
-	    logger.debug(source);
-	    byte[] data = JavaSourceUtil.compile(tablename, source);
-	    if(data==null)
-	    	throw new SclibException("class file generate fail");
-		try 
-		{
-		    logger.debug(getTableClassAbsolutePath());
-			File f=new File(getTableClassAbsolutePath());
-		    FileOutputStream fos=new FileOutputStream(f);
-		    fos.write(data);
-		    fos.close();
-		    if(OSUtil.isWin())
-		    {
-		    	logger.debug("cd /d " + rootDir +" && jar cvf " + getTableJarPath()  +" " + getTableClassPath());
-		    	logger.debug(CommandUtil.execute("cd /d " + rootDir +" && jar cvf " + getTableJarPath()  +" " + getTableClassPath()));
-		    }
-		    else
-		    {
-		    	logger.debug("cd " + rootDir +";jar cvf " + getTableJarPath()  +" " + getTableClassPath());
-		    	logger.debug(CommandUtil.execute("cd " + rootDir +";jar cvf " + getTableJarPath()  +" " + getTableClassPath()));
-		    }  
-		   
-		} catch (Exception e) {
-			logger.error(e);
-		}  
-	}
-               
-	
-	//得到表对应的包名 
-	private String getPackageName()
-	{
-		return dbname;
-	}
-	
-	//得到表对应Class全名 
-	public String getTableClassName()
-	{
-		return dbname + "." + tablename;
-	}
-	
-
-	//得到表对应class文件相对路径
-	private String getTableClassPath()
-	{
-		return FileUtil.getFilePath(new String[]{dbname}, tablename+".class");
-	}
-	
-	//得到表对应class文件绝对路径
-	private String getTableClassAbsolutePath()
-	{
-		return FileUtil.getFilePath(new String[]{rootDir,dbname}, tablename+".class");
-	}
-	
-	//得到表对应jar文件相对路径
-	private String getTableJarPath()
-	{
-		return FileUtil.getFilePath(new String[]{dbname}, tablename+".jar");
-	}
-	
-	//得到表对应jar文件绝对路径
-	public String getTableJarAbsolutePath()
-	{
-		return FileUtil.getFilePath(new String[]{rootDir,dbname}, tablename+".jar");
-	}
-	
-	public String getDbname() {
-		return dbname;
-	}
-	public void setDbname(String dbname) {
-		this.dbname = dbname;
-	}
 	public String getTablename() {
 		return tablename;
 	}
@@ -146,6 +128,16 @@ public class SparkTable {
 	}
 	public void setFieldType(List<String> fieldType) {
 		this.fieldType = fieldType;
-	}	
+	}
+
+	public StructType getSchema() {
+		return schema;
+	}
+
+	public void setSchema(StructType schema) {
+		this.schema = schema;
+	}
+	
+	
 }
 

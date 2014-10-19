@@ -17,44 +17,22 @@ import org.apache.spark.sql.api.java.Row;
 public class DataSetLoader implements Serializable{
 
 	/**
-	 *@Description: JavaRDD<String> 转成avaRDD<T>
+	 *@Description: JavaRDD<String> 转成JavaRDD<Row>
 	 *@param rdd
 	 *@return
 	 */
-	public static <T>  JavaRDD toRdd(JavaRDD<String> rdd, final Class<T> cl, final List<String> fieldsName){
-		return rdd.map(new Function<String, Object>() {
-			
-			public Object call(String v1) throws Exception {
-				Object t1= cl.newInstance();		
-				String[] values =v1.split("\\t");				
-				int i=0;
-				for(String filedName : fieldsName)
-				{
-					String value = values[i];
-					String setName = filedName.substring(0,1).toUpperCase() + filedName.substring(1); 						
-					Class<?> type = t1.getClass().getDeclaredField(filedName).getType();						
-					if(type.getName().equals("java.lang.String"))
-						t1.getClass().getMethod("set"+setName,type).invoke(t1, value);
-					else if(type.getName().equals("int"))				
-						t1.getClass().getMethod("set"+setName,type).invoke(t1, Integer.parseInt(value));
-					else if(type.getName().equals("float"))				
-						t1.getClass().getMethod("set"+setName,type).invoke(t1, Float.parseFloat(value));
-					else if(type.getName().equals("double"))				
-						t1.getClass().getMethod("set"+setName,type).invoke(t1, Double.parseDouble(value));
-					else if(type.getName().equals("boolean"))				
-						t1.getClass().getMethod("set"+setName,type).invoke(t1, Boolean.parseBoolean(value));
-					else if(type.getName().equals("byte"))				
-						t1.getClass().getMethod("set"+setName,type).invoke(t1, Byte.parseByte(value));
-					else if(type.getName().equals("short"))				
-						t1.getClass().getMethod("set"+setName,type).invoke(t1, Short.parseShort(value));
-					else if(type.getName().equals("long"))				
-						t1.getClass().getMethod("set"+setName,type).invoke(t1, Long.parseLong(value));
-					i++;
-				}				
-				return t1;
+	public static JavaRDD<Row> toRow(JavaRDD<String> rdd)
+	{
+		return rdd.map(new Function<String, Row>() 
+		{
+			public Row call(String record) throws Exception {
+				String[] fields = record.split("\\t");
+				return Row.create(fields);
 			}
-		});				
+		});
 	}
+	
+	
 	
 	/**
 	 *@Description: 通用JavaSchemaRDD类型RDD转成指定类型（T）RDD

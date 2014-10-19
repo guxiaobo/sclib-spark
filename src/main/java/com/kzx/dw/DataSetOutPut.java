@@ -12,8 +12,6 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.sql.api.java.JavaSchemaRDD;
 import org.apache.spark.sql.api.java.Row;
-
-import com.kzx.dw.util.FileUtil;
 import com.kzx.dw.util.OSUtil;
 
 

@@ -13,66 +13,7 @@ import org.apache.spark.sql.api.java.JavaSchemaRDD;
 
 public class DataSetAnalyzer {
 	private static Logger logger = Logger.getLogger(DataSetAnalyzer.class);
-	
-	/**
-	 *@Description: groupByKey
-	 *@param stx
-	 *@param cl
-	 *@param rdd
-	 *@param columnName
-	 *@return
-	 */
-	public static <T> JavaSchemaRDD groupByKey(JavaSQLContext stx,String tablename, String... columnName)
-	{
-		String colStr="";
-		int i=0;
-		for(String col : columnName)
-		{
-			if(i>0)
-				colStr+= "," + col;
-			else
-				colStr+= col;
-			i++;
-		}
 		
-		JavaSchemaRDD result = stx.sql("select "+colStr+" from "+tablename+" group by " +colStr);
-		return result;
-	}
-	
-	public static <T> JavaSchemaRDD max(JavaSQLContext stx,String tablename, String... columnName)
-	{
-		String colStr="";
-		int i=0;
-		for(String col : columnName)
-		{
-			if(i>0)
-				colStr+= "," + "max("+ col +")";
-			else
-				colStr+= "max("+ col +")";
-			i++;
-		}
-		
-		JavaSchemaRDD result = stx.sql("select "+colStr+" from "+tablename);
-		return result;
-	}
-	
-	public static <T> JavaSchemaRDD max1(JavaSQLContext stx,String tablename, String... columnName)
-	{
-		String colStr="";
-		int i=0;
-		for(String col : columnName)
-		{
-			if(i>0)
-				colStr+= "," + "max("+ col +")";
-			else
-				colStr+= "max("+ col +")";
-			i++;
-		}
-		
-		JavaSchemaRDD result = stx.sql("select "+colStr+" from "+tablename);
-		return result;
-	}
-	
 	public static JavaSchemaRDD sql(JavaSQLContext stx, String sql)
 	{
 		logger.debug(sql);
